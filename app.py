@@ -28,8 +28,6 @@ def index():
 
     return render_template("index.html", corrected=corrected_output)
 
-
-# ✅ LIVE Correction via JS AJAX call
 @app.route("/live-correct", methods=["POST"])
 def live_correct():
     data = request.get_json()
@@ -43,6 +41,7 @@ def live_correct():
 
     return jsonify({"corrected": corrected})
 
-
 if __name__ == "__main__":
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)
