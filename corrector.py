@@ -1,40 +1,58 @@
+import re
+import os
 from textblob import TextBlob
 from symspellpy.symspellpy import SymSpell, Verbosity
-import os
-import re
 
-# Load SymSpell only once
 sym_spell = SymSpell(max_dictionary_edit_distance=2)
 dictionary_path = os.path.join("symspell", "frequency_dictionary_en_82_765.txt")
 sym_spell.load_dictionary(dictionary_path, 0, 1)
 
-def correct_with_textblob(text):
-    blob = TextBlob(text)
-    corrected = str(blob.correct())
-    return highlight_changes(text, corrected)
+def smart_tokenize(text):
+    return re.findall(r"[A-Za-z]+|[0-9]+|[^\w\s]", text)
 
 def correct_with_symspell(text):
-    corrected_words = []
-    for word in text.split():
-        suggestion = sym_spell.lookup(word, Verbosity.CLOSEST, max_edit_distance=2)
-        if suggestion:
-            corrected = suggestion[0].term
-            if corrected.lower() != word.lower():
-                corrected_words.append(f"<mark>{corrected}</mark>")
+    wrong_to_correct = []
+    output_tokens = []
+    for token in smart_tokenize(text):
+        if token.isalpha():
+            suggestions = sym_spell.lookup(token, Verbosity.CLOSEST, max_edit_distance=2)
+            if suggestions:
+                corrected = suggestions[0].term
+                if corrected.lower() != token.lower():
+                    wrong_to_correct.append(f"{token} → {corrected}")
+                    output_tokens.append(f"<mark>{corrected}</mark>")
+                else:
+                    output_tokens.append(token)
             else:
-                corrected_words.append(word)
+                output_tokens.append(f"<span style='text-decoration: wavy underline red;'>{token}</span>")
+        elif token.isdigit():
+            output_tokens.append(f"<span style='text-decoration: wavy underline red;'>{token}</span>")
         else:
-            corrected_words.append(word)
-    return " ".join(corrected_words)
+            output_tokens.append(token)
 
-def highlight_changes(original, corrected):
-    original_words = original.split()
-    corrected_words = corrected.split()
-    result = []
-    for o, c in zip(original_words, corrected_words):
+    formatted_text = ""
+    for i, t in enumerate(output_tokens):
+        if i > 0 and not re.match(r"[^\w\s]", t):
+            formatted_text += " "
+        formatted_text += t
+
+    summary = "<br>".join(wrong_to_correct) if wrong_to_correct else "No valid corrections ✅"
+    return formatted_text, summary
+
+def correct_with_textblob(text):
+    blob = TextBlob(text)
+    corrected_text = str(blob.correct())
+    orig_words = text.split()
+    corr_words = corrected_text.split()
+    wrong_to_correct = []
+    highlighted_output = []
+    for o, c in zip(orig_words, corr_words):
         if o != c:
-            result.append(f"<mark>{c}</mark>")
+            wrong_to_correct.append(f"{o} → {c}")
+            highlighted_output.append(f"<mark>{c}</mark>")
         else:
-            result.append(c)
-    result.extend(corrected_words[len(original_words):])  # handle extra words
-    return " ".join(result)
+            highlighted_output.append(c)
+    highlighted_output.extend(corr_words[len(orig_words):])
+    formatted = " ".join(highlighted_output)
+    summary = "<br>".join(wrong_to_correct) if wrong_to_correct else "No corrections ✅"
+    return formatted, summary

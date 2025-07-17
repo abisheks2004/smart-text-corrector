@@ -5,41 +5,45 @@
   <title>FixAI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🧠</text></svg>">
-
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🧠</text></svg>">
 </head>
 <body>
+
   <div class="toggle-mode">
     <button id="modeToggle"><i data-feather="sun"></i></button>
   </div>
 
-  <div class="container">
-    <h2><i data-feather="edit-3"></i> Smart Text Corrector using AI</h2>
-    
-    <form method="POST" enctype="multipart/form-data">
-      <label>Select Correction Method:</label>
-      <select name="method" id="method">
-        <option value="textblob">TextBlob</option>
-        <option value="symspell">SymSpell</option>
-      </select>
+  <div class="split-screen">
+    <div class="split-left">
+      <h2><i data-feather="edit-3"></i> Smart Text Corrector</h2>
+      
+      <form method="POST" enctype="multipart/form-data">
+        <label>Select Correction Method:</label>
+        <select name="method" id="method">
+          <option value="textblob">Smart AI Correction</option>
+          <option value="symspell">Quick Dictionary Correction</option>
+        </select>
 
-      <label>Enter Text:</label>
-      <textarea name="text" id="liveInput" placeholder="Type something with mistakes..."></textarea>
+        <label>Enter Text:</label>
+        <textarea name="text" id="liveInput" placeholder="Type something with mistakes..."></textarea>
 
-      <label>Or Upload a .txt File:</label>
-      <input type="file" name="file" accept=".txt">
+        <label>Or Upload a .txt File:</label>
+        <input type="file" name="file" accept=".txt">
 
-      <button type="submit"><i data-feather="refresh-ccw"></i> Correct It</button>
-    </form>
-
-    <div id="liveOutput" class="result" style="display:none;"></div>
-
-    {% if corrected %}
-    <div class="result">
-      <h4>Corrected Text (highlighted):</h4>
-      <p>{{ corrected|safe }}</p>
+        <button type="submit"><i data-feather="refresh-ccw"></i> Correct It</button>
+      </form>
     </div>
-    {% endif %}
+
+    <div class="split-right">
+      <h2><i data-feather="check-circle"></i> Corrected Output</h2>
+      <div id="liveOutput" class="result" style="display:none;"></div>
+
+      {% if corrected %}
+      <div class="result scrollable">
+        {{ corrected|safe }}
+      </div>
+      {% endif %}
+    </div>
   </div>
 
   <script src="{{ url_for('static', filename='script.js') }}"></script>
